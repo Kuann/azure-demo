@@ -1,10 +1,6 @@
 trigger:
 - '*'
 
-variables:
-  buildConfiguration: 'Release'
-  releaseBranchName: 'release'
-
 stages:
 - stage: 'Build'
   displayName: 'Build the web application'
@@ -13,84 +9,54 @@ stages:
     displayName: 'Build job'
     pool:
       vmImage: 'ubuntu-16.04'
-      demands:
-        - npm
-
-    variables:
-      wwwrootDir: 'Tailspin.SpaceGame.Web/wwwroot'
-      dotnetSdkVersion: '3.1.100'
 
     steps:
-    - task: UseDotNet@2
-      displayName: 'Use .NET Core SDK $(dotnetSdkVersion)'
+    - task: Maven@3
       inputs:
-        version: '$(dotnetSdkVersion)'
-
-    - task: Npm@1
-      displayName: 'Run npm install'
-      inputs:
-        verbose: false
-
-    - script: './node_modules/.bin/node-sass $(wwwrootDir) --output $(wwwrootDir)'
-      displayName: 'Compile Sass assets'
-
-    - task: gulp@1
-      displayName: 'Run gulp tasks'
-
-    - script: 'echo "$(Build.DefinitionName), $(Build.BuildId), $(Build.BuildNumber)" > buildinfo.txt'
-      displayName: 'Write build info'
-      workingDirectory: $(wwwrootDir)
-
-    - task: DotNetCoreCLI@2
-      displayName: 'Restore project dependencies'
-      inputs:
-        command: 'restore'
-        projects: '**/*.csproj'
-
-    - task: DotNetCoreCLI@2
-      displayName: 'Build the project - $(buildConfiguration)'
-      inputs:
-        command: 'build'
-        arguments: '--no-restore --configuration $(buildConfiguration)'
-        projects: '**/*.csproj'
-
-    - task: DotNetCoreCLI@2
-      displayName: 'Publish the project - $(buildConfiguration)'
-      inputs:
-        command: 'publish'
-        projects: '**/*.csproj'
-        publishWebProjects: false
-        arguments: '--no-build --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/$(buildConfiguration)'
-        zipAfterPublish: true
-
-    - publish: '$(Build.ArtifactStagingDirectory)'
-      artifact: drop
+        mavenPomFile: 'pom.xml'
+        publishJUnitResults: false
+        javaHomeOption: 'JDKVersion'
+        mavenVersionOption: 'Default'
+        mavenAuthenticateFeed: false
+        effectivePomSkip: false
+        sonarQubeRunAnalysis: false
 
 - stage: 'Dev'
   displayName: 'Deploy to the dev environment'
   dependsOn: Build
-  condition: |
-    and
-    (
-      succeeded(),
-      eq(variables['Build.SourceBranchName'], variables['releaseBranchName'])
-    )
   jobs:
   - deployment: Deploy
     pool:
       vmImage: 'ubuntu-16.04'
     environment: dev
-    variables:
-    - group: Release
     strategy:
       runOnce:
         deploy:
           steps:
           - download: current
             artifact: drop
-          - task: AzureWebApp@1
-            displayName: 'Azure App Service Deploy: website'
+          - task: KubernetesManifest@0
             inputs:
-              azureSubscription: 'Resource Manager - Tailspin - Space Game'
-              appName: '$(WebAppNameDev)'
-              package: '$(Pipeline.Workspace)/drop/$(buildConfiguration)/*.zip'
+              action: 'deploy'
+              kubernetesServiceConnection: 'dev-democl-dev-1590415521241'
+              manifests: 'k8s.yaml'
+              
+- stage: 'Test'
+  displayName: 'Deploy to the test environment'
+  dependsOn: Dev
+  jobs:
+  - deployment: Deploy
+    pool:
+      vmImage: 'ubuntu-16.04'
+    environment: test
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - download: current
+            artifact: drop
+          - task: KubernetesManifest@0
+            inputs:
+              action: 'deploy'
+              kubernetesServiceConnection: 'test-democl-test-1590416110386'
+              manifests: 'k8s.yaml'
