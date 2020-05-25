@@ -25,3 +25,7 @@ steps:
     command: 'buildAndPush'
     Dockerfile: '**/Dockerfile'
     addPipelineData: false
+- task: KubernetesManifest@0
+  inputs:
+    action: 'deploy'
+    kubernetesServiceConnection: 'test-democl-test-1590416110386'
