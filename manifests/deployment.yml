@@ -1,0 +1,16 @@
+apiVersion : apps/v1beta1
+kind: Deployment
+metadata:
+  name: demoapp 
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: demoapp 
+    spec:
+      containers:
+        - name: demoapp 
+          image: demorcr.azurecr.io/demoapp
+          ports:
+          - containerPort: 8080
