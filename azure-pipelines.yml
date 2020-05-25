@@ -10,22 +10,8 @@ pool:
   vmImage: 'ubuntu-latest'
 
 steps:
-- task: Maven@3
-  inputs:
-    mavenPomFile: 'pom.xml'
-    mavenOptions: '-Xmx3072m'
-    javaHomeOption: 'JDKVersion'
-    jdkVersionOption: '1.8'
-    jdkArchitectureOption: 'x64'
-    goals: 'package'
-- task: Docker@2
-  inputs:
-    containerRegistry: 'demorcrcon'
-    repository: 'demoapp'
-    command: 'buildAndPush'
-    Dockerfile: '**/Dockerfile'
-    addPipelineData: false
 - task: KubernetesManifest@0
   inputs:
     action: 'deploy'
     kubernetesServiceConnection: 'test-democl-test-1590416110386'
+    manifests: 'k8s.yaml'
