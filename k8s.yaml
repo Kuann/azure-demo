@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: demoapp
-        image: demorcr.azurecr.io/demoapp:1
+        image: demorcr.azurecr.io/demoapp:2
         # Add opening port
         ports:                                      #+
         - containerPort: 8080                       #+
