@@ -26,7 +26,7 @@ public class EmployeeResource {
 	@Path("/error")
 	@Produces({ MediaType.APPLICATION_JSON })
 	public void error() {
-		1/0;
+		int a = 1/0;
 	}
 
 }
