@@ -21,5 +21,12 @@ public class EmployeeResource {
 		map.put("Message", "Hello Azure!");
 		return map;
 	}
+	
+	@GET
+	@Path("/error")
+	@Produces({ MediaType.APPLICATION_JSON })
+	public void error() {
+		1/0;
+	}
 
 }
