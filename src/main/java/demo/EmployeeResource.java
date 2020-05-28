@@ -18,7 +18,7 @@ public class EmployeeResource {
 	@Produces({ MediaType.APPLICATION_JSON })
 	public Map<String, String> get() {
 		Map<String, String> map = new HashMap<String, String>();
-		map.put("Message", "Hello Azure!");
+		map.put("Message", "Hello Azure");
 		return map;
 	}
 	
